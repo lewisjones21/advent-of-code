@@ -116,10 +116,15 @@ public class Calculator : MonoBehaviour
     // Update is called once per frame
     private int Calculate()
     {
-        int total = 0;
+        int total = 0, current;
         foreach (int input in _inputs)
         {
-             total += (input / 3) - 2;
+            current = (input / 3) - 2;
+            while (current > 0)
+            {
+                total += current;
+                current = (current / 3) - 2;
+            }
         }
         return total;
     }
