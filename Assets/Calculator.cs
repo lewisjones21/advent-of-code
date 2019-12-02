@@ -17,20 +17,34 @@ public class Calculator : MonoBehaviour
     // Update is called once per frame
     private int Calculate()
     {
-        int pos = 0;
-        while (_inputs[pos] != 99)
+        int[] program = new int[_inputs.Count];
+        for (int noun = 0; noun <= 99; noun++)
         {
-            if (_inputs[pos] == 1)
+            for (int verb = 0; verb <= 99; verb++)
             {
-                _inputs[_inputs[pos + 3]] = _inputs[_inputs[pos + 1]] + _inputs[_inputs[pos + 2]];
-                pos += 4;
-            }
-            else if (_inputs[pos] == 2)
-            {
-                _inputs[_inputs[pos + 3]] = _inputs[_inputs[pos + 1]] * _inputs[_inputs[pos + 2]];
-                pos += 4;
+                _inputs.CopyTo(program);
+                program[1] = noun;
+                program[2] = verb;
+                int pos = 0;
+                while (program[pos] != 99)
+                {
+                    if (program[pos] == 1)
+                    {
+                        program[_inputs[pos + 3]] = program[_inputs[pos + 1]] + program[_inputs[pos + 2]];
+                        pos += 4;
+                    }
+                    else if (_inputs[pos] == 2)
+                    {
+                        program[_inputs[pos + 3]] = program[_inputs[pos + 1]] * program[_inputs[pos + 2]];
+                        pos += 4;
+                    }
+                }
+                if (program[0] == 19690720)
+                {
+                    return 100 * program[1] + program[2];
+                }
             }
         }
-        return _inputs[0];
+        return -1;
     }
 }
