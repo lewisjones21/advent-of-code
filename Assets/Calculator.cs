@@ -43,21 +43,19 @@ public class Calculator : MonoBehaviour
             currentPos = nextPos;
         }
 
-        int closest = int.MaxValue, current;
+        int shortest = int.MaxValue, current;
         for (int a = 0; a < wireASegments.Count; a++)
         {
             for (int b = 0; b < wireBSegments.Count; b++)
             {
-                current = GetManhattanDistance(
-                    Vector2.zero,
-                    GetIntersection(wireASegments[a], wireBSegments[b]) ?? Vector2.zero);
-                if (current < closest && current > 0)
+                current = GetCombinedTime(a, wireASegments, b, wireBSegments);
+                if (current < shortest && current > 0)
                 {
-                    closest = current;
+                    shortest = current;
                 }
             }
         }
-        return closest;
+        return shortest;
     }
 
     private Vector2 GetDelta(string deltaString)
@@ -117,6 +115,29 @@ public class Calculator : MonoBehaviour
 
     private int GetManhattanDistance(Vector2 pointA, Vector2 pointB)
     {
-        return (int)(Mathf.Abs(pointA.x - pointB.x) + Mathf.Abs(pointA.y - pointB.y));
+         return (int)(Mathf.Abs(pointA.x - pointB.x) + Mathf.Abs(pointA.y - pointB.y));
+    }
+
+    private int GetCombinedTime(int a, List<Tuple<Vector2, Vector2>> wireASegments,
+                                int b, List<Tuple<Vector2, Vector2>> wireBSegments)
+    {
+        Vector2? temp = GetIntersection(wireASegments[a], wireBSegments[b]);
+        if (temp == null)
+        {
+            return -1;
+        }
+        Vector2 intersection = temp ?? Vector2.zero;
+        int time = 0;
+        for (int segA = 0; segA < a; segA++)
+        {
+            time += GetManhattanDistance(wireASegments[segA].Item1, wireASegments[segA].Item2);
+        }
+        time += GetManhattanDistance(wireASegments[a].Item1, intersection);
+        for (int segB = 0; segB < b; segB++)
+        {
+            time += GetManhattanDistance(wireBSegments[segB].Item1, wireBSegments[segB].Item2);
+        }
+        time += GetManhattanDistance(wireBSegments[b].Item1, intersection);
+        return time;
     }
 }
