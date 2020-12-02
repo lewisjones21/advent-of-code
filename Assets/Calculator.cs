@@ -13,9 +13,12 @@ public class Calculator : CalculatorBase<int, int>
         {
             for (int j = i + 1; j < _input.Count; j++)
             {
-                if (_input[i] + _input[j] == 2020)
+                for (int k = i + 2; k < _input.Count; k++)
                 {
-                    return _input[i] * _input[j];
+                    if (_input[i] + _input[j] + _input[k] == 2020)
+                    {
+                        return _input[i] * _input[j] * _input[k];
+                    }
                 }
             }
         }
