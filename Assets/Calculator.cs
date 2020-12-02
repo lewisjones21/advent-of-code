@@ -1,28 +1,29 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
-public class Calculator : CalculatorBase<int, int>
+public class Calculator : CalculatorBase<Tuple<int, int, char, string>, int>
 {
-    protected override int ParseInput(string inputLine)
+    protected override Tuple<int, int, char, string> ParseInput(string inputLine)
     {
-        return int.Parse(inputLine);
+        string[] splitInput = inputLine.Split('-', ' ', ':');
+        return new Tuple<int, int, char, string>(int.Parse(splitInput[0]),
+                                                 int.Parse(splitInput[1]),
+                                                 splitInput[2][0],
+                                                 splitInput[4]);
     }
 
     protected override int CalculateOutput()
     {
+        int validInputs = 0;
+        int charCount;
         for (int i = 0; i < _input.Count; i++)
         {
-            for (int j = i + 1; j < _input.Count; j++)
+            charCount = _input[i].Item4.Split(_input[i].Item3).Length - 1;
+            if (charCount >= _input[i].Item1 && charCount <= _input[i].Item2)
             {
-                for (int k = i + 2; k < _input.Count; k++)
-                {
-                    if (_input[i] + _input[j] + _input[k] == 2020)
-                    {
-                        return _input[i] * _input[j] * _input[k];
-                    }
-                }
+                validInputs++;
             }
         }
-        Debug.LogWarning("Could not find a valid output");
-        return 0;
+        return validInputs;
     }
 }
