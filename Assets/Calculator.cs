@@ -15,11 +15,14 @@ public class Calculator : CalculatorBase<Tuple<int, int, char, string>, int>
     protected override int CalculateOutput()
     {
         int validInputs = 0;
-        int charCount;
+        bool pos1IsChar, pos2IsChar;
         for (int i = 0; i < _input.Count; i++)
         {
-            charCount = _input[i].Item4.Split(_input[i].Item3).Length - 1;
-            if (charCount >= _input[i].Item1 && charCount <= _input[i].Item2)
+            pos1IsChar = _input[i].Item4.Length >= _input[i].Item1
+                && _input[i].Item4[_input[i].Item1 - 1] == _input[i].Item3;
+            pos2IsChar = _input[i].Item4.Length >= _input[i].Item2
+                && _input[i].Item4[_input[i].Item2 - 1] == _input[i].Item3;
+            if ((pos1IsChar && !pos2IsChar) || (!pos1IsChar && pos2IsChar))
             {
                 validInputs++;
             }
