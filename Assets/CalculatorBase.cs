@@ -45,12 +45,12 @@ public abstract class CalculatorBase<TInput, TOutput> : MonoBehaviour
         StreamReader reader = new StreamReader(_inputFilename);
         while (!reader.EndOfStream)
         {
-            values.Add(ParseInput(reader.ReadLine()));
+            values.Add(ParseInputLine(reader.ReadLine()));
         }
         return values;
     }
 
-    protected abstract TInput ParseInput(string inputLine);
+    protected abstract TInput ParseInputLine(string inputLine);
 
     protected abstract TOutput CalculateOutput();
 }

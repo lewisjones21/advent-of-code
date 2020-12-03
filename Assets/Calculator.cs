@@ -1,32 +1,22 @@
-﻿using System;
-using UnityEngine;
+﻿using System.Collections.Generic;
 
-public class Calculator : CalculatorBase<Tuple<int, int, char, string>, int>
+public class Calculator : CalculatorBase<List<char>, int>
 {
-    protected override Tuple<int, int, char, string> ParseInput(string inputLine)
+    protected override List<char> ParseInputLine(string inputLine)
     {
-        string[] splitInput = inputLine.Split('-', ' ', ':');
-        return new Tuple<int, int, char, string>(int.Parse(splitInput[0]),
-                                                 int.Parse(splitInput[1]),
-                                                 splitInput[2][0],
-                                                 splitInput[4]);
+        return new List<char>(inputLine.ToCharArray());
     }
 
     protected override int CalculateOutput()
     {
-        int validInputs = 0;
-        bool pos1IsChar, pos2IsChar;
-        for (int i = 0; i < _input.Count; i++)
+        int treeHits = 0;
+        for (int i = 0, xPos = 0; i < _input.Count; i++, xPos += 3)
         {
-            pos1IsChar = _input[i].Item4.Length >= _input[i].Item1
-                && _input[i].Item4[_input[i].Item1 - 1] == _input[i].Item3;
-            pos2IsChar = _input[i].Item4.Length >= _input[i].Item2
-                && _input[i].Item4[_input[i].Item2 - 1] == _input[i].Item3;
-            if ((pos1IsChar && !pos2IsChar) || (!pos1IsChar && pos2IsChar))
+            if (_input[i][xPos % _input[i].Count] == '#')
             {
-                validInputs++;
+                treeHits++;
             }
         }
-        return validInputs;
+        return treeHits;
     }
 }
