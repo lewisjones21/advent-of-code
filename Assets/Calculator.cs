@@ -15,6 +15,17 @@ public class Calculator : CalculatorBase<int, long>
 
     protected override long CalculateOutput()
     {
-        return Mathf.Max(_input.ToArray());
+        _input.Sort();
+
+        for (int i = 1; i < _input.Count; i++)
+        {
+            if (_input[i - 1] == _input[i] - 2)
+            {
+                return _input[i] - 1;
+            }
+        }
+
+        Debug.LogError("Could not find valid output");
+        return 0;
     }
 }
