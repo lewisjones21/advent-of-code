@@ -1,38 +1,81 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-public class Calculator : CalculatorBase<List<char>, long>
+public class Calculator : CalculatorBase<List<Tuple<int, string>>, long>
 {
-    protected override List<char> ParseInputLine(string inputLine)
+    private readonly List<string> _requiredFieldNames = new List<string> {
+        "byr",
+        "iyr",
+        "eyr",
+        "hgt",
+        "hcl",
+        "ecl",
+        "pid"
+    };
+
+    private readonly List<string> _possibleFieldNames = new List<string> {
+        "byr",
+        "iyr",
+        "eyr",
+        "hgt",
+        "hcl",
+        "ecl",
+        "pid",
+        "cid"
+    };
+
+    protected override List<Tuple<int, string>> ParseInputLine(string inputLine)
     {
-        return new List<char>(inputLine.ToCharArray());
+        List<string> splitValues = new List<string>(inputLine.Split(':', ' '));
+        List<Tuple<int, string>> returnValues = new List<Tuple<int, string>>();
+        if (splitValues.Count > 1)
+        {
+            for (int i = 0; i < splitValues.Count; i += 2)
+            {
+                returnValues.Add(new Tuple<int, string>(_possibleFieldNames.IndexOf(splitValues[i]),
+                                                        splitValues[i + 1]));
+            }
+        }
+        return returnValues;
     }
 
     protected override long CalculateOutput()
     {
-        long accumulator = 0;
-        int[] slopeXValues = { 1, 3, 5, 7, 1 };
-        int[] slopeYValues = { 1, 1, 1, 1, 2 };
-        for (int s = 0; s < slopeXValues.Length; s++)
+        // Determine the bitmask required for a valid input
+        int validInputMask = 0;
+        for (int i = 0; i < _requiredFieldNames.Count; i++)
         {
-            int treeHits = 0;
-            for (int yPos = 0, xPos = 0;
-                 yPos < _input.Count;
-                 yPos += slopeYValues[s], xPos += slopeXValues[s])
+            validInputMask += 1 << _possibleFieldNames.IndexOf(_requiredFieldNames[i]);
+        }
+
+        // Calculate the bitmasks of each input paragraph
+        List<int> inputValidations = new List<int>();
+        inputValidations.Add(0);
+        for (int i = 0; i < _input.Count; i++)
+        {
+            if (_input[i].Count == 0)
             {
-                if (_input[yPos][xPos % _input[yPos].Count] == '#')
-                {
-                    treeHits++;
-                }
-            }
-            if (accumulator == 0)
-            {
-                accumulator = treeHits;
+                inputValidations.Add(0);
             }
             else
             {
-                accumulator *= treeHits;
+                for (int j = 0; j < _input[i].Count; j++)
+                {
+                    inputValidations[inputValidations.Count - 1] += 1 << _input[i][j].Item1;
+                }
             }
         }
-        return accumulator;
+
+        // Count how many inputs have valid bitmasks
+        int validInputCount = 0;
+        for (int v = 0; v < inputValidations.Count; v++)
+        {
+            if ((inputValidations[v] & validInputMask) == validInputMask)
+            {
+                validInputCount++;
+            }
+        }
+
+        return validInputCount;
     }
 }
