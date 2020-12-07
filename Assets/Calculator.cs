@@ -1,64 +1,88 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
-public class Calculator : CalculatorBase<int, long>
+public class Calculator : CalculatorBase<Tuple<string, List<Tuple<int, string>>>, long>
 {
-    protected override int ParseInputLine(string inputLine)
+    protected override Tuple<string, List<Tuple<int, string>>> ParseInputLine(string inputLine)
     {
-        int returnValue = 0;
-        if (inputLine.Length == 0)
+        string[] keyAndValues = inputLine.Split(new string[] { " bags contain " },
+                                                StringSplitOptions.RemoveEmptyEntries);
+        string[] countsAndValues = keyAndValues[1].Split(
+            new string[] { " bag, ", " bags, ", " bag.", " bags." },
+            StringSplitOptions.RemoveEmptyEntries);
+        if (countsAndValues.Length == 0 || countsAndValues[0] == "no other")
         {
-            return 0;
+            return new Tuple<string, List<Tuple<int, string>>>(keyAndValues[0],
+                                                               new List<Tuple<int, string>>());
         }
-        for (int i = 0; i < inputLine.Length; i++)
+        Tuple<int, string>[] structuredValues = new Tuple<int, string>[countsAndValues.Length];
+        for (int v = 0; v < countsAndValues.Length; v++)
         {
-            returnValue += 1 << (inputLine[i] - 'a');
+            structuredValues[v] = new Tuple<int, string>(
+                int.Parse(countsAndValues[v].Substring(0, 1)), countsAndValues[v].Substring(2));
         }
-        return returnValue;
+        return new Tuple<string, List<Tuple<int, string>>>(
+            keyAndValues[0], new List<Tuple<int, string>>(structuredValues));
     }
 
     protected override long CalculateOutput()
     {
-        // Combine the individual input entries into their collective group values
-        List<int> groupBitMasks = new List<int>();
-        groupBitMasks.Add(_input[0]);
-        for (int i = 1; i < _input.Count; i++)
+        string target = "shiny gold";
+        // Determine whether each type of bag contains the target bag
+        // 0 - undetermined, 1 - yes, 2 - no
+        List<int> containsTarget = new List<int>(new int[_input.Count]);
+        for (int i = 0; i < _input.Count; i++)
         {
-            if (_input[i] == 0)
-            {
-                groupBitMasks.Add(_input[++i]);
-            }
-            else
-            {
-                groupBitMasks[groupBitMasks.Count - 1] &= _input[i];
-            }
+            containsTarget[i] = ContainsTarget(target, _input, containsTarget, i) ? 1 : 2;
         }
-        // Count the set bits in the bitmask of each group
-        List<int> groupBitCounts = new List<int>();
-        for (int g = 0; g < groupBitMasks.Count; g++)
+        // Count the number of different bag types which could contain the target
+        // (Do not count the target itself)
+        int sum = 0;
+        for (int c = 0; c < containsTarget.Count; c++)
         {
-            groupBitCounts.Add(CountSetBits(groupBitMasks[g]));
-        }
-        // Sum the number of bits set to '1' across all grouped entries
-        long sumAcrossGroups = 0;
-        for (int g = 0; g < groupBitCounts.Count; g++)
-        {
-            sumAcrossGroups += groupBitCounts[g];
+            if (containsTarget[c] == 1 && _input[c].Item1 != target)
+            {
+                sum++;
+            }
         }
 
-        return sumAcrossGroups;
+        return sum;
     }
 
-    private int CountSetBits(int n)
+    private bool ContainsTarget(string target,
+                                List<Tuple<string, List<Tuple<int, string>>>> inputs,
+                                List<int> inputContainsTarget,
+                                int currentIndex,
+                                int recursionCount = 0)
     {
-        int totalBitsSet = 0;
-        // While any bits are set
-        while (n != 0)
+        if (recursionCount > 100)
         {
-            // Bitwise AND with n - 1 unsets the rightmost set bit
-            n &= n - 1;
-            // Count the bit that was removed
-            totalBitsSet++;
+            Debug.LogError("Recursion level has reached 100; aborting calculation; " +
+                           "results may be invalid");
+            return false;
         }
-        return totalBitsSet;
+        if (inputContainsTarget[currentIndex] == 1 || inputs[currentIndex].Item1 == target)
+        {
+            return true;
+        }
+        else if (inputContainsTarget[currentIndex] == 2)
+        {
+            return false;
+        }
+        for (int i = 0; i < inputs[currentIndex].Item2.Count; i++)
+        {
+            int newIndex = inputs.FindIndex((Tuple<string, List<Tuple<int, string>>> obj)
+                                            => obj.Item1 == inputs[currentIndex].Item2[i].Item2);
+            if (ContainsTarget(
+                target, inputs, inputContainsTarget, newIndex, recursionCount + 1))
+            {
+
+                inputContainsTarget[currentIndex] = 1;
+                return true;
+            }
+        }
+        inputContainsTarget[currentIndex] = 2;
+        return false;
     }
 }
