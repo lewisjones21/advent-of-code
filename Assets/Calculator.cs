@@ -29,7 +29,7 @@ public class Calculator : CalculatorBase<int, long>
             }
             else
             {
-                groupBitMasks[groupBitMasks.Count - 1] |= _input[i];
+                groupBitMasks[groupBitMasks.Count - 1] &= _input[i];
             }
         }
         // Count the set bits in the bitmask of each group
