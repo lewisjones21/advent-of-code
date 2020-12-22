@@ -3,6 +3,11 @@ using UnityEngine;
 
 public class Calculator : CalculatorBase<long, long>
 {
+    private class TernaryGraphNode
+    {
+        public TernaryGraphNode child1, child2, child3;
+    }
+
     protected override long ParseInputLine(string inputLine)
     {
         return long.Parse(inputLine);
@@ -18,29 +23,71 @@ public class Calculator : CalculatorBase<long, long>
         // Add the final input of [largest input + 3]
         _input.Add(_input[_input.Count - 1] + 3);
 
-        // Determine how many of each step size is present in the inputs (plus an extra 3)
-        int diffsOf1 = 0, diffsOf2 = 0, diffsOf3 = 0;
-        for (int i = 1; i < _input.Count; i++)
+        // For each number, map the subsequent numbers it can connect to
+        Dictionary<long, TernaryGraphNode> nodeMap = new Dictionary<long, TernaryGraphNode>();
+        TernaryGraphNode currentNode;
+        for (int i = _input.Count - 1; i >= 0; i--)
         {
-            switch (_input[i] - _input[i - 1])
+            currentNode = new TernaryGraphNode();
+
+            for (int offset = 1; offset <= 3; offset++)
             {
-                case 1:
-                    diffsOf1++;
-                    break;
-                case 2:
-                    diffsOf2++;
-                    break;
-                case 3:
-                    diffsOf3++;
-                    break;
-                default:
-                    Debug.LogErrorFormat("Unexpected input delta of {0} at index {1}",
-                                         _input[i] - _input[i - 1], i);
-                    break;
+                if (i + offset < _input.Count)
+                {
+                    switch (_input[i + offset] - _input[i])
+                    {
+                        case 1:
+                            nodeMap.TryGetValue(_input[i + offset], out currentNode.child1);
+                            break;
+                        case 2:
+                            nodeMap.TryGetValue(_input[i + offset], out currentNode.child2);
+                            break;
+                        case 3:
+                            nodeMap.TryGetValue(_input[i + offset], out currentNode.child3);
+                            break;
+                    }
+                }
             }
+
+            nodeMap.Add(_input[i], currentNode);
         }
-        Debug.LogFormat("There were {0}, {1}, {2} diffs of 1, 2, 3",
-                        diffsOf1, diffsOf2, diffsOf3);
-        return diffsOf1 * diffsOf3;
+        Debug.LogFormat("Generated {0} ternary tree nodes", nodeMap.Count);
+
+        // Traverse the ternary tree, counting the number of possible paths 
+        Dictionary<TernaryGraphNode, long> onwardPathCounts
+            = new Dictionary<TernaryGraphNode, long>();
+        onwardPathCounts.Add(nodeMap[_input[_input.Count - 1]], 1);
+        CountOnwardPaths(onwardPathCounts, nodeMap[0]);
+
+        for (int i = _input.Count - 1; i >= 0; i--)
+        {
+            Debug.LogFormat("Input {0} ({1}) has {2} onward path possibilities",
+                            i, _input[i], onwardPathCounts[nodeMap[_input[i]]]);
+        }
+
+        return onwardPathCounts[nodeMap[_input[0]]];
+    }
+
+    private long CountOnwardPaths(Dictionary<TernaryGraphNode, long> onwardPathCounts,
+                                  TernaryGraphNode node)
+    {
+        if (!onwardPathCounts.ContainsKey(node))
+        {
+            long count = 0;
+            if (node.child1 != null)
+            {
+                count += CountOnwardPaths(onwardPathCounts, node.child1);
+            }
+            if (node.child2 != null)
+            {
+                count += CountOnwardPaths(onwardPathCounts, node.child2);
+            }
+            if (node.child3 != null)
+            {
+                count += CountOnwardPaths(onwardPathCounts, node.child3);
+            }
+            onwardPathCounts.Add(node, count);
+        }
+        return onwardPathCounts[node];
     }
 }
