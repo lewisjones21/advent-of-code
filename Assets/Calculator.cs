@@ -10,52 +10,37 @@ public class Calculator : CalculatorBase<long, long>
 
     protected override long CalculateOutput()
     {
-        int searchRange = 25;
-        // Determine which number cannot be created by summing two numbers in the previous range
-        bool hasSolution;
-        int lastIndex;
-        for (lastIndex = searchRange; lastIndex < _input.Count; lastIndex++)
-        {
-            hasSolution = false;
-            for (int index1 = lastIndex - searchRange; index1 < lastIndex - 1; index1++)
-            {
-                for (int index2 = index1 + 1; index2 < lastIndex; index2++)
-                {
-                    if (_input[index1] + _input[index2] == _input[lastIndex])
-                    {
-                        hasSolution = true;
-                        break;
-                    }
-                }
-                if (hasSolution)
-                {
-                    break;
-                }
-            }
-            if (!hasSolution)
-            {
-                break;
-            }
-        }
-        // Determine the range of contiguous numbers that sum to the number discovered above
-        for (int startIndex = 0; startIndex < lastIndex; startIndex++)
-        {
-            int rangeWidth = 0;
-            long sum = 0;
-            while (sum < _input[lastIndex])
-            {
-                sum += _input[startIndex + rangeWidth];
-                rangeWidth++;
-            }
-            if (sum == _input[lastIndex])
-            {
-                List<long> range = _input.GetRange(startIndex, rangeWidth);
-                range.Sort();
-                return range[0] + range[range.Count - 1];
-            }
-        }
+        // Sort the inputs into ascending order
+        _input.Sort();
 
-        Debug.LogError("No solution was found");
-        return 0;
+        // Add the starting input of 0
+        _input.Insert(0, 0);
+        // Add the final input of [largest input + 3]
+        _input.Add(_input[_input.Count - 1] + 3);
+
+        // Determine how many of each step size is present in the inputs (plus an extra 3)
+        int diffsOf1 = 0, diffsOf2 = 0, diffsOf3 = 0;
+        for (int i = 1; i < _input.Count; i++)
+        {
+            switch (_input[i] - _input[i - 1])
+            {
+                case 1:
+                    diffsOf1++;
+                    break;
+                case 2:
+                    diffsOf2++;
+                    break;
+                case 3:
+                    diffsOf3++;
+                    break;
+                default:
+                    Debug.LogErrorFormat("Unexpected input delta of {0} at index {1}",
+                                         _input[i] - _input[i - 1], i);
+                    break;
+            }
+        }
+        Debug.LogFormat("There were {0}, {1}, {2} diffs of 1, 2, 3",
+                        diffsOf1, diffsOf2, diffsOf3);
+        return diffsOf1 * diffsOf3;
     }
 }
